@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  stemsorter:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - STORE_TYPE=postgres
+      - DB_CONN=postgres://postgres:postgres@db:5432/stemsorter?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["-store", "postgres", "-db", "postgres://postgres:postgres@db:5432/stemsorter?sslmode=disable"]
+    volumes:
+      - ./data:/app/data
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stemsorter
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
